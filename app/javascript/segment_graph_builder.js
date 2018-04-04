@@ -29,7 +29,7 @@ $(function() {
     spinners.push(spinner)
   }
 
-  fetch(`/api/v4/runs/${gon.run.id}?historic=1`, {
+  const runJSON = fetch(`/api/v4/runs/${gon.run.id}?historic=1`, {
     headers: {
       accept: 'application/json'
     }
@@ -38,15 +38,12 @@ $(function() {
       return response.json()
     }
     throw new Error('Request for run from api failed')
-  }).then(function(json) {
+  })
+    
+  runJSON.then(function(json) {
     spinners.forEach(function(spinner) {
       spinner.stop()
     })
-    if (json.run.program === 'livesplit') {
-      json.run.segments.forEach(function(segment) {
-        buildSegmentGraph(segment, 'segment-graph-' + segment.id)
-      });
-    }
   }).catch(function(error) {
     spinners.forEach(function(spinner) {
       spinner.stop()
@@ -55,10 +52,22 @@ $(function() {
       graphHolder.find('.panel-title').find('h1').text('Error retrieving data for graphs')
     }
   })
-})
 
-const panel_builder = function($panel, id) {
-  const $panel_clone = $panel.clone()
-  $panel_clone.find('.panel-body').append($('<div />').prop('id', id_string))
-  return $panel_clone
-}
+  if (document.getElementById('run-timer').dataset.timer === 'livesplit') {
+    for (const toggler of document.getElementsByClassName('segment-graph-toggler')) {
+      toggler.addEventListener('click', function(event) {
+        event.preventDefault()
+        document.querySelector(
+          '.segment-graph-holder[data-segment="' + event.target.dataset.segment + '"]'
+        ).closest('tr').classList.toggle('collapsed')
+        if (event.target.dataset.generated !== '1') {
+          event.target.dataset.generated = '1'
+          runJSON.then(function(json) {
+            const segment = json.run.segments.filter(segment => (segment.id === event.target.dataset.segment))[0]
+            buildSegmentGraph(segment)
+          })
+        }
+      })
+    }
+  }
+})

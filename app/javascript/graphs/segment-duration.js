@@ -2,7 +2,7 @@ import Highcharts from 'highcharts'
 import Exporting from 'highcharts/modules/exporting'
 Exporting(Highcharts)
 
-const buildSegmentGraph = function(segment, divId) {
+const buildSegmentGraph = function(segment) {
   const url = new URL(window.location.href)
   const duration_string = `${url.searchParams.get('timing') || 'real'}time_duration_ms`
 
@@ -16,7 +16,7 @@ const buildSegmentGraph = function(segment, divId) {
   })
   graph_data[0].visible = true
 
-  Highcharts.chart(divId, {
+  Highcharts.chart('segment-graph-holder-' + segment.id, {
     exporting: {
         chartOptions: {
             plotOptions: {
